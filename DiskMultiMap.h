@@ -22,12 +22,17 @@ public:
     public:
         Iterator();
         // You may add additional constructors
+        Iterator(DiskMultiMap* d,BinaryFile::Offset o);
         bool isValid() const;
         Iterator& operator++();
         MultiMapTuple operator*();
         
     private:
         // Your private member declarations will go here
+        bool m_valid;
+        BinaryFile::Offset offset;
+        DiskMultiMap* p;
+       
     };
     
     DiskMultiMap();
@@ -38,49 +43,61 @@ public:
     bool insert(const std::string& key, const std::string& value, const std::string& context);
     Iterator search(const std::string& key);
     int erase(const std::string& key, const std::string& value, const std::string& context);
+    //helper function, to be delete
+    void printlist(string key);
     
-    
-    BinaryFile::Offset hasher(string key);
+
 private:
     // Your private member declarations will go here
-    BinaryFile b;
+    BinaryFile m_file;
     int m_bucket;
     struct DiskNode
-    {
-        DiskNode(string v, string c)
+    {   DiskNode (){}
+        DiskNode(string k, string v, string c,BinaryFile::Offset n)
        {
+           strcpy(key,k.c_str());
            strcpy(value,v.c_str());
            strcpy(context,c.c_str());
+           next = n;
        }
-        char* value;
-        char* context;
+        char key[121];
+        char value[121];
+        char context[121];
         BinaryFile::Offset next;
         
     };
     
     struct freememory
     {
-        freememory(BinaryFile::Offset n, int sizes,int nt)
-        :num(n),size(sizes),next(nt){}
-        int size;
+        freememory(BinaryFile::Offset n, int nt)
+        :num(n),next(nt){}
+        
         BinaryFile::Offset num;
         int next;
     };  //For head, offset represents total bucket in use, size represents # of created slot
     
-    struct Bucket
+    struct head
     {
-        Bucket(string keyvalue)
-        {
-            strcpy(key,keyvalue.c_str());
-        }
-        char* key;
+        head(int u,int t,BinaryFile::Offset n)
+        :numinuse(u),numintotal(t),next(n){}
+        int numinuse;
+        int numintotal;
         BinaryFile::Offset next;
-        BinaryFile::Offset nextbucket;
+    };
+    struct Bucket
+    {   Bucket(){}
+        char key[121];
+        BinaryFile::Offset next;
         bool used;
     };
 
     string m_fn;
     string m_free = "free";
+    BinaryFile::Offset hasher(string key);
+
+    
+    
+    BinaryFile::Offset keyhash(string key);
 };
 
 #endif // DISKMULTIMAP_H_
